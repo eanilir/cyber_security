@@ -13,9 +13,13 @@ class SecuritySimulation {
             failedLogins: 0,
             bruteForceDetections: 0,
             botAttackDetections: 0,
+            ddosAttackDetections: 0,
+            sqlInjectionDetections: 0,
             totalAttacks: 0
         };
         this.userAttempts = {}; // IP -> {timestamp, count, targetUser}
+        this.suspiciousIPs = new Map(); // IP -> {attemptCount, timestamp, status}
+        this.rateLimitMap = new Map(); // IP -> {lastAttemptTime, attemptCount, window}
         this.running = false;
         this.botInterval = null;
     }
@@ -90,6 +94,9 @@ class SecuritySimulation {
             Logger.warning('Blocked IP attempt', `${sourceIP} → ${username} (rejected)`);
             return false;
         }
+
+        // SUSPICIOUS DURUMU KONTROL ET
+        this.checkSuspiciousActivity(sourceIP, username);
 
         // Bu IP'den yapılan girişimleri takip et
         if (!this.userAttempts[sourceIP]) {
@@ -193,6 +200,148 @@ class SecuritySimulation {
     }
 
     /**
+     * SUSPICIOUS DURUMU: İlk 1-2 deneme sonra uyarı
+     * @param {string} ip - Kontrol edilecek IP
+     * @param {string} username - Hedef kullanıcı
+     */
+    checkSuspiciousActivity(ip, username) {
+        if (!this.suspiciousIPs.has(ip)) {
+            this.suspiciousIPs.set(ip, {
+                attemptCount: 0,
+                firstAttemptTime: Date.now(),
+                targetUsers: new Set(),
+                status: 'monitoring'
+            });
+        }
+
+        const suspData = this.suspiciousIPs.get(ip);
+        suspData.attemptCount++;
+        suspData.targetUsers.add(username);
+
+        // 1. deneme → uyarı
+        if (suspData.attemptCount === 1) {
+            Logger.warning('Suspicious activity detected', `${ip} - 1st attempt on ${username}`);
+            // Şu an henüz block etme, sadece işaretle
+        }
+
+        // 2. deneme → daha güçlü uyarı
+        if (suspData.attemptCount === 2) {
+            Logger.warning('Suspicious activity escalated', `${ip} - 2nd attempt (targets: ${Array.from(suspData.targetUsers).join(', ')})`);
+            // Bu IP'den gelen kullanıcıları suspicious olarak işaretle (eğer varsa)
+            this.users.forEach(user => {
+                if (user.homeIP === ip && user.status === 'normal') {
+                    user.status = 'suspicious';
+                }
+            });
+        }
+    }
+
+    /**
+     * DDoS ATTACK SIMULATION
+     * Çok sayıda IP'den eş zamanlı flood
+     */
+    simulateDDoSAttack(targetUsername = 'admin', requestCount = 10) {
+        Logger.error('DDoS attack simulated', `${requestCount} simultaneous requests to ${targetUsername}`);
+        
+        // Rastgele IP'ler oluştur
+        for (let i = 0; i < requestCount; i++) {
+            const randomIP = `203.0.113.${100 + i}`; // Örnek IP aralığı
+            
+            // Her request için failed login simüle et
+            this.simulateFailedLogin(targetUsername, randomIP);
+            
+            // Rate limiting kontrol et
+            this.checkRateLimit(randomIP);
+        }
+
+        this.statistics.ddosAttackDetections++;
+        this.statistics.totalAttacks++;
+        
+        // DDoS tespiti: 10+ farklı IP'den aynı hedefe
+        const recentDDoS = this.userAttempts;
+        let ddosDetected = false;
+        
+        Object.values(recentDDoS).forEach(ipData => {
+            if (ipData.targetUsers && ipData.targetUsers.has(targetUsername)) {
+                const uniqueIPs = Object.keys(recentDDoS).filter(ip => 
+                    recentDDoS[ip].targetUsers && recentDDoS[ip].targetUsers.has(targetUsername)
+                ).length;
+                
+                if (uniqueIPs >= 8) {
+                    ddosDetected = true;
+                    Logger.error('DDoS attack detected', `Target: ${targetUsername}, IPs: ${uniqueIPs}`);
+                }
+            }
+        });
+    }
+
+    /**
+     * SQL INJECTION SIMULATION
+     * SQL injection karakterlerini içeren giriş denemeleri
+     */
+    simulateSQLInjection(targetUsername = "' OR '1'='1", sourceIP = '198.51.100.1') {
+        Logger.error('SQL injection attack simulated', `Target: ${targetUsername} from ${sourceIP}`);
+        
+        // SQL injection pattern'leri
+        const sqlPatterns = [
+            "' OR '1'='1",
+            "admin'--",
+            "' UNION SELECT NULL--",
+            "1' AND 1=1--"
+        ];
+
+        // Her pattern için deneme yap
+        sqlPatterns.forEach((pattern, index) => {
+            const attackIP = `198.51.100.${100 + index}`;
+            this.simulateFailedLogin(pattern, attackIP);
+            
+            Logger.warning('SQL injection attempt blocked', `Pattern: ${pattern} from ${attackIP}`);
+        });
+
+        this.statistics.sqlInjectionDetections++;
+        this.statistics.totalAttacks++;
+        Logger.error('SQL injection pattern detected', `Multiple SQL patterns attempted from different IPs`);
+    }
+
+    /**
+     * RATE LIMITING: Zaman bazlı sınırlama
+     * @param {string} ip - Kontrol edilecek IP
+     * @returns {boolean} - Rate limit aşıldı mı?
+     */
+    checkRateLimit(ip) {
+        const now = Date.now();
+        const timeWindow = 1000; // 1 saniye
+        const maxRequests = 10; // 1 saniyede max 10 request
+
+        if (!this.rateLimitMap.has(ip)) {
+            this.rateLimitMap.set(ip, {
+                requests: [],
+                blocked: false
+            });
+        }
+
+        const rateLimitData = this.rateLimitMap.get(ip);
+        
+        // Zaman penceresinin dışındaki requestleri sil
+        rateLimitData.requests = rateLimitData.requests.filter(t => now - t < timeWindow);
+        
+        // Yeni request ekle
+        rateLimitData.requests.push(now);
+
+        // Rate limit kontrol et
+        if (rateLimitData.requests.length > maxRequests && !rateLimitData.blocked) {
+            Logger.error('Rate limit exceeded', `${ip} - ${rateLimitData.requests.length} requests in ${timeWindow}ms`);
+            rateLimitData.blocked = true;
+            
+            // IP'yi block et
+            this.blockIP(ip, 'Rate Limit Exceeded');
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
      * Bot saldırısı simüle et (arka planda otomatik)
      * Farklı IP'lerden ardışık giriş denemeleri
      */
@@ -276,7 +425,8 @@ class SecuritySimulation {
             suspiciousUsers: this.users.filter(u => u.status === 'suspicious').length,
             blockedUsers: this.users.filter(u => u.status === 'blocked').length,
             totalUsers: this.users.length,
-            blockedIPCount: this.blockedIPs.size
+            blockedIPCount: this.blockedIPs.size,
+            suspiciousIPCount: this.suspiciousIPs.size
         };
     }
 
@@ -289,12 +439,16 @@ class SecuritySimulation {
             user.failedAttempts = 0;
         });
         this.blockedIPs.clear();
+        this.suspiciousIPs.clear();
         this.userAttempts = {};
+        this.rateLimitMap.clear();
         this.statistics = {
             successLogins: 0,
             failedLogins: 0,
             bruteForceDetections: 0,
             botAttackDetections: 0,
+            ddosAttackDetections: 0,
+            sqlInjectionDetections: 0,
             totalAttacks: 0
         };
         this.stop();

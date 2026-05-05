@@ -75,6 +75,17 @@ class UIManager {
             this.render();
         });
 
+        document.getElementById('btn-trigger-ddos')?.addEventListener('click', () => {
+            const targetUser = 'admin';
+            simulation.simulateDDoSAttack(targetUser, 12);
+            this.render();
+        });
+
+        document.getElementById('btn-trigger-sql')?.addEventListener('click', () => {
+            simulation.simulateSQLInjection();
+            this.render();
+        });
+
         document.getElementById('clear-logs')?.addEventListener('click', () => {
             Logger.instance.clear();
             this.render();
@@ -182,7 +193,9 @@ class UIManager {
             'stat-normal': stats.normalUsers,
             'stat-suspicious': stats.suspiciousUsers,
             'stat-blocked': stats.blockedUsers,
-            'stat-attacks': stats.totalAttacks
+            'stat-attacks': stats.totalAttacks,
+            'stat-ddos': stats.ddosAttackDetections,
+            'stat-sql': stats.sqlInjectionDetections
         };
 
         Object.entries(elements).forEach(([id, value]) => {
