@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mini Network Attack Dashboard</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- HEADER -->
+        <header class="header">
+            <div class="header-content">
+                <h1>🛡️ Network Attack Dashboard</h1>
+                <div class="header-info">
+                    <span class="time" id="current-time"></span>
+                </div>
+            </div>
+        </header>
+
+        <!-- MAIN CONTENT -->
+        <main class="main-content">
+            <!-- SOL PANEL: NETWORK VISUALIZATION -->
+            <section class="network-panel">
+                <h2>🌐 Network Activity</h2>
+                <div class="network-grid" id="network-grid">
+                    <!-- Dinamik olarak doldurulacak -->
+                </div>
+            </section>
+
+            <!-- SAĞ PANEL: LOG & STATS -->
+            <aside class="log-panel">
+                <div class="log-header">
+                    <h2>📋 Activity Log</h2>
+                    <button class="btn-small" id="clear-logs">Clear</button>
+                </div>
+                <div class="log-content" id="log-content">
+                    <!-- Dinamik olarak doldurulacak -->
+                </div>
+            </aside>
+        </main>
+
+        <!-- ALT PANEL: STATISTICS & CHART -->
+        <footer class="stats-panel">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3>🟢 Normal Users</h3>
+                    <p class="stat-value" id="stat-normal">0</p>
+                </div>
+                <div class="stat-card">
+                    <h3>🟡 Suspicious</h3>
+                    <p class="stat-value" id="stat-suspicious">0</p>
+                </div>
+                <div class="stat-card">
+                    <h3>🔴 Blocked</h3>
+                    <p class="stat-value" id="stat-blocked">0</p>
+                </div>
+                <div class="stat-card">
+                    <h3>⚔️ Attacks Detected</h3>
+                    <p class="stat-value" id="stat-attacks">0</p>
+                </div>
+            </div>
+            <div class="chart-container">
+                <h3>📊 Attack Timeline</h3>
+                <canvas id="attack-chart"></canvas>
+            </div>
+        </footer>
+
+        <!-- CONTROL PANEL -->
+        <div class="control-panel">
+            <h3>⚙️ Simulation Control</h3>
+            <div class="controls">
+                <button class="btn" id="btn-start-sim">Start Simulation</button>
+                <button class="btn btn-danger" id="btn-stop-sim" disabled>Stop</button>
+                <button class="btn btn-secondary" id="btn-add-user">Add Normal User</button>
+                <button class="btn btn-warning" id="btn-trigger-brute-force">Trigger Brute Force</button>
+                <button class="btn btn-danger" id="btn-trigger-bot-attack">Trigger Bot Attack</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPTS -->
+    <script src="js/logger.js"></script>
+    <script src="js/simulation.js"></script>
+    <script src="js/ui.js"></script>
+</body>
+</html>
