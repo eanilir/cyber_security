@@ -1,6 +1,8 @@
 # 🛡️ Mini Network Attack Dashboard
 
-Kullanıcıların ve botların ağ üzerindeki aktivitelerini simüle eden, siber güvenlik eğitimi için tasarlanmış interaktif bir dashboard uygulamasıdır.
+Kullanıcıların ve botların ağ üzerindeki aktivitelerini simüle eden, siber güvenlik eğitimi için tasarlanmış **interaktif modern dashboard** uygulamasıdır.
+
+**Versiyon: 2.0.0** - Modernleştirilmiş Tasarım & Gelişmiş Saldırı Tespiti 🚀
 
 ## ✨ Temel Özellikler
 
@@ -10,24 +12,35 @@ Kullanıcıların ve botların ağ üzerindeki aktivitelerini simüle eden, sibe
 - **Brute Force Saldırıları**: Aynı IP'den 3+ başarısız giriş denemesi
 - **Dinamik Kullanıcı Ekleme**: Sistem çalışırken yeni kullanıcı eklenebilir
 
-### 2️⃣ Tepit (Detection)
-| Saldırı Türü | Algılama Kriteri | Aksiyon |
-|-------------|------------------|--------|
-| **Brute Force** | Aynı IP'den 3+ başarısız giriş | IP'yi engelle |
-| **Bot Attack** | 3+ farklı IP'den aynı hedefe hızlı giriş | IP'leri engelle |
+### 2️⃣ Saldırı Tipleri & Tepit (Detection)
 
-### 3️⃣ Görselleştirme
-- 🟢 **Yeşil**: Normal kullanıcı / Başarılı giriş
-- 🟡 **Sarı**: Şüpheli aktivite
-- 🔴 **Kırmızı**: Engellenen IP / Saldırı
-- **Canlı Log**: Son 20 giriş/saldırı kaydı
-- **Attack Timeline**: Zaman ekseninde saldırı frekansı (bar chart)
+| Saldırı Tipi | Algılama Kriteri | Aksiyon | İkon |
+|-------------|------------------|--------|------|
+| **Brute Force** | Aynı IP'den 3+ başarısız giriş | IP'yi engelle | 🔓 |
+| **Bot Attack** | 3+ farklı IP'den aynı hedefe hızlı giriş | IP'leri engelle | 🤖 |
+| **DDoS Attack** | 10+ eş zamanlı flood request | IP'leri engelle | ⚡ |
+| **SQL Injection** | SQL pattern karakterleri içeren giriş | Pattern'i engelle | 🔨 |
+| **Suspicious Activity** | 1-2 başarısız deneme | Uyarı & izle | ⚠️ |
+| **Rate Limiting** | 1 saniyede 10+ request | IP'yi engelle | 📊 |
 
-### 4️⃣ İstatistikler
-- Toplam normal kullanıcı sayısı
-- Şüpheli aktivite sayısı
-- Engellenen kullanıcı/IP sayısı
-- Tespit edilen saldırı sayısı
+### 3️⃣ Görselleştirme & Tasarım
+
+**Modern Dashboard Özellikleri:**
+- 🎨 Glassmorphism tasarımı (gradient backgrounds)
+- ✨ Smooth animations ve transitions
+- 📱 Responsive layout (mobil & masaüstü)
+- 🎬 Canlı pulse ve glow efektleri
+- 🟢 🟡 🔴 Durum renkleri (normal, suspicious, blocked)
+- 📊 HTML5 Canvas tabanlı attack timeline chart
+- ℹ️ Renkli log entry'ler (✓⚠✕ℹ emoji'ler)
+
+**Stat Kartları:**
+- 🟢 Normal Users
+- 🟡 Suspicious Activity
+- 🔴 Blocked Users
+- ⚔️ Total Attacks
+- ⚡ DDoS Attempts
+- 🔨 SQL Injections
 
 ## 📁 Proje Yapısı
 
@@ -55,12 +68,17 @@ cyber_security/
 2. Tarayıcıda açın: `http://localhost:8000`
 
 ### Kontrol Paneli
-- **Start Simulation**: Bot saldırılarını otomatik tetiklemeye başla
-- **Stop**: Simülasyonu durdur
-- **Add Normal User**: Yeni kullanıcı ekle
-- **Trigger Brute Force**: Manuel brute force saldırısı tetikle
-- **Trigger Bot Attack**: Manuel bot saldırısı tetikle
-- **Clear**: Log panelini temizle
+**Temel Kontroller:**
+- ▶️ **Start Simulation**: Bot saldırılarını otomatik tetiklemeye başla
+- ⏹️ **Stop**: Simülasyonu durdur
+- ➕ **Add Normal User**: Yeni kullanıcı ekle
+- 🗑️ **Clear**: Log panelini temizle
+
+**Saldırı Tetikleyicileri:**
+- 🔓 **Brute Force**: Manuel brute force saldırısı (3 deneme)
+- 🤖 **Bot Attack**: Manuel bot saldırısı (3+ IP'den)
+- ⚡ **DDoS Attack**: Manuel DDoS simülasyonu (12 request)
+- 🔨 **SQL Injection**: Manuel SQL injection test (4 pattern)
 
 ### Etkileşim
 - **Kullanıcı Kartını Tıkla**: Manuel olarak o kullanıcıyı login yap
@@ -123,10 +141,12 @@ Brute Force Attack Detected!
 
 ## 🛠️ Teknoloji Yığını
 
-- **Frontend**: HTML5, CSS3, Vanilla JavaScript
-- **Veri**: JSON (localStorage opsiyonel)
-- **Grafik**: HTML5 Canvas API
-- **Sunucu**: Python HTTP Server (veya herhangi bir HTTP sunucusu)
+- **Frontend**: HTML5, CSS3 (Glassmorphism), Vanilla JavaScript
+- **Grafik**: HTML5 Canvas API (Attack Timeline Chart)
+- **Veri**: JSON (metin tabanlı, localStorage opsiyonel)
+- **Sunucu**: Python HTTP Server veya herhangi bir HTTP sunucusu
+- **Tasarım**: Modern gradient, animations, responsive layout
+- **Animasyonlar**: CSS3 keyframe animations, smooth transitions
 
 ## 📝 Notlar
 
@@ -145,12 +165,20 @@ Bu proje aşağıdaki kavramları öğretmek için tasarlanmıştır:
 
 ## 🚀 Gelecek İyileştirmeler
 
-- [ ] "Suspicious" durumunu kullan (uyarı bazlı durumlandırma)
-- [ ] Sistem reset fonksiyonu
-- [ ] İstatistikler dışa aktarma (CSV/JSON)
-- [ ] Farklı saldırı türleri (DDoS simülasyonu vb.)
-- [ ] Kullanıcı kimlik doğrulama seviyeleri (weak, medium, strong)
+- [ ] Coğrafi IP harita görselleştirmesi
+- [ ] Attack heatmap (zaman bazlı analiz)
+- [ ] Kullanıcı profil seviyeleri (weak, medium, strong)
+- [ ] 2FA / MFA simülasyonu
+- [ ] Endpoint security & firewall rules
+- [ ] API rate limiting vs GraphQL throttling
+- [ ] Machine learning tabanlı anomaly detection
+- [ ] Dark/Light theme toggle
+- [ ] Data export (CSV, JSON, PDF)
+- [ ] Multi-user dashboard (team collaboration)
 
 ---
 
-**Yapım**: Siber Güvenlik Eğitim Projesi | **Versiyon**: 1.0
+**Yapım**: Siber Güvenlik Eğitim Projesi  
+**Versiyon**: 2.0.0 (Modernized Design & Advanced Attacks)  
+**Son Güncelleme**: 5 Mayıs 2026  
+**Lisans**: Eğitim Amaçlı (Educational Use)
