@@ -120,7 +120,30 @@ class SecuritySimulation {
 
         Logger.warning('Login failed', `${username} from ${sourceIP} (attempt ${attemptCount}/3)`);
 
-        // BRUTE FORCE TESPİTİ: 3+ başarısız giriş = IP engelleme
+        // Hedef kullanıcıyı bul (isim veya id ile eşleşme, case-insensitive)
+        const uname = String(username).toLowerCase();
+        const targetUser = this.users.find(u => {
+            return (u.name && u.name.toLowerCase() === uname) || (u.id && u.id.toLowerCase() === uname);
+        });
+
+        if (targetUser) {
+            targetUser.targetFailedAttempts = (targetUser.targetFailedAttempts || 0) + 1;
+            targetUser.lastAttempt = Date.now();
+
+            if (targetUser.targetFailedAttempts === 1) {
+                targetUser.status = 'suspicious';
+                Logger.warning('Target suspicious', `${targetUser.name} is being targeted (1st attempt)`);
+            } else if (targetUser.targetFailedAttempts === 2) {
+                targetUser.status = 'suspicious';
+                Logger.warning('Target suspicious escalated', `${targetUser.name} is being targeted (2nd attempt)`);
+            } else if (targetUser.targetFailedAttempts >= 3) {
+                // Hesabı kilitle (görsel olarak blocked)
+                targetUser.status = 'blocked';
+                Logger.error('Target account locked', `${targetUser.name} locked due to repeated failed attempts`);
+            }
+        }
+
+        // BRUTE FORCE TESPİTİ: 3+ başarısız giriş = IP engelleme (kaynak IP bazlı)
         if (attemptCount >= 3) {
             this.blockIP(sourceIP, 'Brute Force Attack');
             this.statistics.bruteForceDetections++;
@@ -366,6 +389,71 @@ class SecuritySimulation {
     }
 
     /**
+     * Bir kullanıcıyı taklit et (kendisi gibi başarılı aktiviteler üretir)
+     * @param {string} userId
+     * @param {number} times
+     */
+    impersonateUser(userId, times = 1) {
+        const user = this.users.find(u => u.id === userId);
+        if (!user) return false;
+
+        for (let i = 0; i < times; i++) {
+            this.simulateNormalLogin(user.id, user.homeIP);
+        }
+
+        Logger.info('Impersonation', `${user.name} generated ${times} normal actions`);
+        return true;
+    }
+
+    /**
+     * Kullanıcının IP'si ile saldırı başlat (act-as-attacker)
+     * @param {string} userId
+     * @param {string|null} targetName
+     * @param {number} attempts
+     */
+    actAsAttacker(userId, targetName = null, attempts = 3) {
+        const user = this.users.find(u => u.id === userId);
+        if (!user) return false;
+
+        // Hedef yoksa rastgele bir hedef seç (kendisi hariç)
+        let target = targetName;
+        if (!target) {
+            const others = this.users.filter(u => u.id !== userId);
+            if (others.length === 0) return false;
+            target = others[Math.floor(Math.random() * others.length)].name;
+        }
+
+        const sourceIP = user.homeIP;
+
+        for (let i = 0; i < attempts; i++) {
+            this.simulateFailedLogin(target, sourceIP);
+            this.checkRateLimit(sourceIP);
+        }
+
+        Logger.warning('Act as attacker', `${user.name} (${sourceIP}) attacked ${target} x${attempts}`);
+        return true;
+    }
+
+    /**
+     * Manuel hedefli saldırı: seçili kullanıcıya saldır (farklı IP'lerden)
+     * @param {string} targetUserId
+     * @param {number} attempts
+     */
+    manualTargetAttack(targetUserId, attempts = 3) {
+        const target = this.users.find(u => u.id === targetUserId);
+        if (!target) return false;
+
+        for (let i = 0; i < attempts; i++) {
+            const randomIP = `203.0.113.${100 + Math.floor(Math.random() * 100)}`;
+            this.simulateFailedLogin(target.name, randomIP);
+            this.checkRateLimit(randomIP);
+        }
+
+        Logger.warning('Manual target attack', `Target: ${target.name} (${attempts} attempts)`);
+        return true;
+    }
+
+    /**
      * Yeni normal kullanıcı ekle
      */
     addNewUser() {
@@ -453,6 +541,34 @@ class SecuritySimulation {
         };
         this.stop();
         Logger.info('System reset', 'All data cleared');
+    }
+
+    /**
+     * Ağ aktivitesini sıfırla (kullanıcı statülerini normalleştir, engellemeleri ve sayacı temizle)
+     */
+    resetNetwork() {
+        this.users.forEach(user => {
+            user.status = 'normal';
+            user.failedAttempts = 0;
+            user.targetFailedAttempts = 0;
+            user.lastAttempt = null;
+        });
+        this.blockedIPs.clear();
+        this.suspiciousIPs.clear();
+        this.userAttempts = {};
+        this.rateLimitMap.clear();
+        this.statistics = {
+            successLogins: 0,
+            failedLogins: 0,
+            bruteForceDetections: 0,
+            botAttackDetections: 0,
+            ddosAttackDetections: 0,
+            sqlInjectionDetections: 0,
+            totalAttacks: 0
+        };
+
+        Logger.info('Network reset', 'Network activity and statuses cleared');
+        return true;
     }
 }
 

@@ -32,7 +32,10 @@
             <aside class="log-panel">
                 <div class="log-header">
                     <h2>📋 Activity Log</h2>
-                    <button class="btn-small" id="clear-logs">Clear</button>
+                    <div style="display:flex;gap:8px;align-items:center">
+                        <input id="log-filter" placeholder="Filter by username" style="padding:6px;border-radius:6px;border:1px solid rgba(255,255,255,0.06);background:transparent;color:inherit" />
+                        <button class="btn-small" id="clear-logs">Clear</button>
+                    </div>
                 </div>
                 <div class="log-content" id="log-content">
                     <!-- Dinamik olarak doldurulacak -->
@@ -81,6 +84,18 @@
                 <button class="btn" id="btn-start-sim">Start Simulation</button>
                 <button class="btn btn-danger" id="btn-stop-sim" disabled>Stop</button>
                 <button class="btn btn-secondary" id="btn-add-user">Add Normal User</button>
+            </div>
+            <div class="controls" style="margin-top:8px;">
+                <div style="display:flex;align-items:center;gap:8px">
+                    <span>Selected:</span>
+                    <strong id="selected-user-name">None</strong>
+                </div>
+            </div>
+            <div class="controls" style="margin-top:8px;gap:8px">
+                <button class="btn" id="btn-impersonate-selected">Impersonate Selected</button>
+                <button class="btn btn-warning" id="btn-act-as-selected">Act as Attacker (Selected)</button>
+                <button class="btn btn-danger" id="btn-target-attack-selected">Target Attack (Selected)</button>
+                <button class="btn btn-secondary" id="btn-reset-network">Reset Network</button>
             </div>
             <div class="controls" style="margin-top: 12px; border-top: 1px solid rgba(6, 182, 212, 0.1); padding-top: 12px;">
                 <button class="btn btn-warning" id="btn-trigger-brute-force">🔓 Brute Force</button>

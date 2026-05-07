@@ -8,6 +8,7 @@ class UIManager {
         this.attackHistory = []; // Zaman serisi: {time, count}
         this.chart = null;
         this.updateInterval = null;
+        this.selectedUserId = null;
     }
 
     /**
@@ -90,6 +91,37 @@ class UIManager {
             Logger.instance.clear();
             this.render();
         });
+
+        // Log filtresi: kullanıcı adına göre filtrele
+        const logFilter = document.getElementById('log-filter');
+        if (logFilter) {
+            logFilter.addEventListener('input', () => this.renderLogPanel());
+        }
+
+        // Seçilmiş kullanıcı için control butonları
+        document.getElementById('btn-impersonate-selected')?.addEventListener('click', () => {
+            if (!this.selectedUserId) { alert('Lütfen önce bir kullanıcı seçin.'); return; }
+            simulation.impersonateUser(this.selectedUserId, 3);
+            this.render();
+        });
+
+        document.getElementById('btn-act-as-selected')?.addEventListener('click', () => {
+            if (!this.selectedUserId) { alert('Lütfen önce bir kullanıcı seçin.'); return; }
+            simulation.actAsAttacker(this.selectedUserId, null, 3);
+            this.render();
+        });
+
+        document.getElementById('btn-target-attack-selected')?.addEventListener('click', () => {
+            if (!this.selectedUserId) { alert('Lütfen önce bir kullanıcı seçin.'); return; }
+            simulation.manualTargetAttack(this.selectedUserId, 3);
+            this.render();
+        });
+
+        document.getElementById('btn-reset-network')?.addEventListener('click', () => {
+            simulation.resetNetwork();
+            Logger.instance.clear();
+            this.render();
+        });
     }
 
     /**
@@ -117,6 +149,12 @@ class UIManager {
         this.renderLogPanel();
         this.renderStats();
         this.updateChart();
+        // Update selected user name display
+        const selEl = document.getElementById('selected-user-name');
+        if (selEl) {
+            const u = simulation.users.find(x => x.id === this.selectedUserId);
+            selEl.textContent = u ? u.name : 'None';
+        }
     }
 
     /**
@@ -144,12 +182,17 @@ class UIManager {
                 <div class="user-ip">${user.homeIP}</div>
             `;
 
-            // Tıklama: manual giriş dene
-            node.addEventListener('click', () => {
-                simulation.simulateNormalLogin(user.id);
+            // Tıklama: kullanıcıyı seç (status sıfırlamasın)
+            node.addEventListener('click', (evt) => {
+                if (this.selectedUserId === user.id) {
+                    this.selectedUserId = null;
+                } else {
+                    this.selectedUserId = user.id;
+                }
                 this.render();
             });
 
+            if (this.selectedUserId === user.id) node.classList.add('selected');
             container.appendChild(node);
         });
     }
@@ -160,11 +203,20 @@ class UIManager {
     renderLogPanel() {
         const container = document.getElementById('log-content');
         if (!container) return;
-
-        const recentLogs = Logger.instance.getRecentLogs(20);
+        const recentLogs = Logger.instance.getRecentLogs(200);
+        const filterInput = document.getElementById('log-filter');
+        const filterValue = filterInput ? filterInput.value.trim().toLowerCase() : '';
         container.innerHTML = '';
 
-        recentLogs.forEach(log => {
+        // Filtre uygula (action veya details içinde kullanıcı adı geçtiyse göster)
+        const filtered = recentLogs.filter(log => {
+            if (!filterValue) return true;
+            const action = String(log.action || '').toLowerCase();
+            const details = String(log.details || '').toLowerCase();
+            return action.includes(filterValue) || details.includes(filterValue);
+        }).slice(-20);
+
+        filtered.forEach(log => {
             const entry = document.createElement('div');
             entry.className = `log-entry ${log.type}`;
 
@@ -182,6 +234,13 @@ class UIManager {
             container.appendChild(entry);
         });
     }
+
+    /**
+     * Basit modal: kullanıcıya özel eylem seçimi
+     * @param {*} user
+     * @param {*} evt
+     */
+    // showUserActionModal removed — selection + control panel used instead
 
     /**
      * İstatistikleri render et
