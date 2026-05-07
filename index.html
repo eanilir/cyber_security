@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Network Attack Dashboard</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="container">
+
+    <!-- HEADER -->
+    <header class="header">
+      <h1>Network Attack Dashboard</h1>
+      <div class="header-info" id="current-time"></div>
+    </header>
+
+    <!-- MAIN: Network + Log -->
+    <div class="main-content">
+
+      <!-- Network Grid -->
+      <section class="network-panel">
+        <div class="panel-header">
+          <span class="panel-title">Network Activity</span>
+        </div>
+        <div class="network-grid" id="network-grid"></div>
+      </section>
+
+      <!-- Log Panel -->
+      <aside class="log-panel">
+        <div class="panel-header">
+          <span class="panel-title">Activity Log</span>
+          <button class="btn-small" id="clear-logs">Clear</button>
+        </div>
+        <div class="log-controls">
+          <input class="log-filter-input" id="log-filter" placeholder="Filter…" />
+        </div>
+        <div class="log-content" id="log-content"></div>
+      </aside>
+    </div>
+
+    <!-- Stats + Chart -->
+    <section class="stats-panel">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <h3>Normal</h3>
+          <p class="stat-value" id="stat-normal">0</p>
+        </div>
+        <div class="stat-card">
+          <h3>Suspicious</h3>
+          <p class="stat-value" id="stat-suspicious">0</p>
+        </div>
+        <div class="stat-card">
+          <h3>Blocked</h3>
+          <p class="stat-value" id="stat-blocked">0</p>
+        </div>
+        <div class="stat-card">
+          <h3>Attacks</h3>
+          <p class="stat-value" id="stat-attacks">0</p>
+        </div>
+        <div class="stat-card">
+          <h3>DDoS</h3>
+          <p class="stat-value" id="stat-ddos">0</p>
+        </div>
+        <div class="stat-card">
+          <h3>SQL Inject</h3>
+          <p class="stat-value" id="stat-sql">0</p>
+        </div>
+      </div>
+      <div class="chart-section">
+        <div class="chart-label">Attack Timeline — last 30s</div>
+        <canvas id="attack-chart"></canvas>
+      </div>
+    </section>
+
+    <!-- Controls -->
+    <div class="control-panel">
+      <div class="panel-title">Simulation Control</div>
+
+      <div class="control-row">
+        <button class="btn btn-green"  id="btn-start-sim">▶ Start</button>
+        <button class="btn btn-red"    id="btn-stop-sim" disabled>■ Stop</button>
+        <button class="btn"            id="btn-add-user">+ Add User</button>
+        <button class="btn"            id="btn-reset-network">↺ Reset</button>
+      </div>
+
+      <div class="control-divider"></div>
+
+      <div class="control-row">
+        <span class="selected-label">Selected: <strong id="selected-user-name">—</strong></span>
+      </div>
+      <div class="control-row">
+        <button class="btn btn-blue"   id="btn-impersonate-selected">Impersonate</button>
+        <button class="btn btn-yellow" id="btn-act-as-selected">Act as Attacker</button>
+        <button class="btn btn-red"    id="btn-target-attack-selected">Target Attack</button>
+      </div>
+
+      <div class="control-divider"></div>
+
+      <div class="control-row">
+        <button class="btn btn-yellow" id="btn-trigger-brute-force">🔓 Brute Force</button>
+        <button class="btn btn-red"    id="btn-trigger-bot-attack">🤖 Bot Attack</button>
+        <button class="btn btn-red"    id="btn-trigger-ddos">⚡ DDoS</button>
+        <button class="btn btn-red"    id="btn-trigger-sql">💉 SQL Inject</button>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="js/logger.js"></script>
+  <script src="js/simulation.js"></script>
+  <script src="js/ui.js"></script>
+</body>
+</html>
